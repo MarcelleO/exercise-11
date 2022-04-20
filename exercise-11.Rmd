@@ -1,0 +1,74 @@
+---
+title: "exercise-11"
+author: "Marcelle"
+date: "4/19/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(broom)
+library(wesanderson)
+f <- "https://raw.githubusercontent.com/difiore/ada-2022-datasets/main/AVONETdataset1.csv"
+d <- d <- read_csv(f, col_names = TRUE)
+
+#select specific variables and create log variables 
+d <- d %>%
+  select(Species1, Family1, Order1, Beak.Length_Culmen, Beak.Width, Beak.Depth, Tarsus.Length, Wing.Length, Tail.Length, Mass, Habitat, Migration, Trophic.Level, Trophic.Niche, Primary.Lifestyle, Min.Latitude, Max.Latitude, Centroid.Latitude, Range.Size)%>%
+  mutate(log_Beak.Length=log(Beak.Length_Culmen), 
+         log_Mass=log(Mass),
+         log_Tarsus.Length=log(Tarsus.Length)
+         )
+
+#calculate relative beak length. perform a linear regression and pull out residuals and pump back into dataset
+m1<- lm(formula=log_Beak.Length ~ log_Mass, data=d )
+ 
+#calculate relative tarsus length
+m2<- lm(formula=log_Tarsus.Length~log_Mass, data=d)
+  
+#add residuals to data frame
+  d <- d%>%
+    mutate(r1=m1$residuals,
+           r2= m2$residuals)
+#Boxplot of relative tarsus length by primary lifestyle
+p1 <- ggplot(d, aes(x=r2, y=Primary.Lifestyle))+ geom_boxplot()
+p1
+#Boxplot of relative beak length by trophic niche
+
+p2<- ggplot(d, aes(x=r1, y= Trophic.Niche))+geom_boxplot()
+p2
+#Run an anova analyses to look at the association between georgraphic range size and migratory status
+#transfrom range size to resemble a unimodal normal distribution
+hist(d$Range.Size)
+hist(log(d$Range.Size))
+
+a <- aov(formula=  log(Range.Size)~Migration, data=d)
+summary(a)
+
+#more migratory birds have a higher geographic range
+
+#limit data to passeriformes (song-birds)
+d <- d%>% filter(Order1=="Passeriformes")
+
+#Run an ANOVA analyses to look at the association between 1) relative beak length and primary lifestyle and between 2) relative beak length and trophic level
+b1 <- aov(formula= r1~Primary.Lifestyle, data=d)
+summary(b1)
+
+b2<- aov(formula= r1~Trophic.Level, data=d)
+summary(b2)
+  #do Boxplots of response variable by each predictor and by the combination of predictors
+p3 <- ggplot(d, aes(x=Trophic.Level, y=R1)) +geom_boxplot()
+p3
+
+p4 <- ggplot(d, aes(x=Primary.Lifestyle, y=r1)) +geom_boxplot()
+p4
+  #do linear models for each predictor seperately
+p5<- 
+#Run a two-way model to look at the association between relative beak lenth and both primary lifestyle and trophic level
+#Finally, run a tow-way model adding the possibility of an interaction effect; to so this we would modify our model formula using colon
+#colon specifies an interaction
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
